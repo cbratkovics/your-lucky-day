@@ -1,5 +1,7 @@
 # Your Lucky Day
 
+[![CI](https://github.com/cbratkovics/your-lucky-day/actions/workflows/ci.yml/badge.svg)](https://github.com/cbratkovics/your-lucky-day/actions/workflows/ci.yml)
+
 **One spin a day. The whole world shares it.**
 
 Every morning at 8:00 am Eastern, one of six charms is drawn for everyone. Before

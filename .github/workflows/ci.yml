@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          # Nothing to install anywhere in this workflow, so there is nothing to cache.
+          package-manager-cache: false
+
+      # Core and worker tests. The root has zero dependencies, so no npm install.
+      - name: Core and worker tests
+        run: npm test
+
+      # The route tests swap the Devvit SDK for an in-memory fake, so no install here either.
+      - name: Reddit route tests
+        working-directory: apps/reddit
+        run: node --import ./test/register.js --test test/routes.test.js
