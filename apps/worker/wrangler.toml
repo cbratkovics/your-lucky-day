@@ -1,0 +1,26 @@
+name = "yourluckyday"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+# Static site served from the same Worker (no separate Pages project).
+[assets]
+directory = "../web"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yourluckyday"
+database_id = "cbb5e6cc-d117-490e-9ab0-27ab3e8a5556"
+
+[vars]
+POLAR_PRODUCT_ID = "88ab6aa4-d5b5-4f16-9123-4329404c95e0"
+
+# Secrets — set with `wrangler secret put NAME` (never commit values):
+#   DAILY_SALT     any long random string; rotate monthly
+#   UNLOCK_SECRET  any long random string
+#   POLAR_TOKEN    Polar organization access token (read checkouts)
+
+# Custom domain: add in the Cloudflare dashboard → Workers → yourluckyday → Domains
+# or uncomment:
+# routes = [{ pattern = "yourluckyday.fyi", custom_domain = true }]

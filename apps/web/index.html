@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your Lucky Day</title>
+<meta name="description" content="One spin a day. The whole world shares it. Call your charm before 8am ET, then see what the day holds.">
+<meta property="og:title" content="Your Lucky Day">
+<meta property="og:description" content="One spin a day. The whole world shares it.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#EEF0F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151732" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Nunito:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="page" id="app">
+
+  <header class="top">
+    <a class="brand" href="/" aria-label="Your Lucky Day home">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <span class="brand-name">Your Lucky Day</span>
+    </a>
+    <div class="clock" aria-live="polite">
+      <span class="clock-label">Next spin in</span>
+      <span class="clock-time" id="countdown">--:--:--</span>
+    </div>
+  </header>
+
+  <p class="preview-note" id="previewNote" hidden>Preview mode: the server isn't reachable, so this spin is a sample and calls aren't counted.</p>
+
+  <!-- ===== The reveal ===== -->
+  <section class="reveal" id="reveal" aria-labelledby="revealTitle">
+    <p class="eyebrow"><span id="dayNumber">Day —</span> · <span id="sparkleName">…</span></p>
+    <h1 class="reveal-title" id="revealTitle">Today the world drew</h1>
+    <div class="charm-stage">
+      <div class="charm-glow" id="charmGlow"></div>
+      <div class="charm-big" id="charmBig" role="img" aria-label="Today's charm">✦</div>
+    </div>
+    <p class="charm-name" id="charmName">…</p>
+    <p class="fortune" id="fortune">Loading today's spin…</p>
+    <p class="move"><span class="move-label">Lucky move</span> <span id="move">…</span></p>
+    <p class="verdict" id="verdict" hidden></p>
+    <div class="reveal-tally" id="revealTally" aria-label="What people called yesterday"></div>
+  </section>
+
+  <!-- ===== The call ===== -->
+  <section class="call" aria-labelledby="callTitle">
+    <h2 class="section-title" id="callTitle">Call tomorrow's charm</h2>
+    <p class="section-sub">Pick one before 8:00 am ET. Everyone sees the same spin. You can change your mind until then.</p>
+    <div class="charms" id="charms" role="group" aria-label="Choose a charm"></div>
+    <p class="call-status" id="callStatus" aria-live="polite">No call yet for tomorrow.</p>
+  </section>
+
+  <!-- ===== The jar ===== -->
+  <section class="jar" aria-labelledby="jarTitle">
+    <div class="jar-head">
+      <h2 class="section-title" id="jarTitle">The luck jar</h2>
+      <span class="jar-count" id="jarCount">0 calls</span>
+    </div>
+    <div class="jar-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="jarBar"><span id="jarFill"></span></div>
+    <p class="jar-next" id="jarNext">Every call from everyone fills the jar. Milestones unlock things for all of us.</p>
+    <p class="jar-unlocked" id="jarUnlocked" aria-label="Unlocked milestones"></p>
+  </section>
+
+  <!-- ===== This community ===== -->
+  <section class="community" id="community" aria-labelledby="communityTitle" hidden>
+    <h2 class="section-title" id="communityTitle">This community</h2>
+    <div class="stats">
+      <div class="stat"><span class="stat-n" id="comCalls">0</span><span class="stat-l" id="comCallsLabel">calls</span></div>
+      <div class="stat"><span class="stat-n" id="comRate">—</span><span class="stat-l">hit rate</span></div>
+      <div class="stat"><span class="stat-n" id="comCharm">—</span><span class="stat-l">most called</span></div>
+      <div class="stat"><span class="stat-n small" id="comBest">—</span><span class="stat-l" id="comBestLabel">best day</span></div>
+    </div>
+    <p class="jar-next" id="communityNote"></p>
+  </section>
+
+  <!-- ===== You ===== -->
+  <section class="you" aria-labelledby="youTitle">
+    <h2 class="section-title" id="youTitle">Your streak</h2>
+    <div class="stats">
+      <div class="stat"><span class="stat-n" id="streak">0</span><span class="stat-l">day streak</span></div>
+      <div class="stat"><span class="stat-n" id="best">0</span><span class="stat-l">best</span></div>
+      <div class="stat"><span class="stat-n" id="hits">0</span><span class="stat-l">called it</span></div>
+      <div class="stat"><span class="stat-n" id="points">0</span><span class="stat-l">sparkle</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="shareBtn" type="button" hidden>Share</button>
+      <a class="btn" id="shareReddit" href="https://www.reddit.com/r/YourLuckyDay/submit" target="_blank" rel="noopener">Post to Reddit</a>
+      <a class="btn" id="shareX" href="https://x.com/intent/post" target="_blank" rel="noopener">Post to X</a>
+      <button class="btn" id="copyBtn" type="button">Copy</button>
+      <button class="btn" id="freezeBtn" type="button" hidden>Use streak freeze</button>
+    </div>
+    <p class="share-done" id="shareDone" aria-live="polite" hidden>Copied. Paste it anywhere.</p>
+
+    <h3 class="sub-title" id="historyTitle">Your history</h3>
+    <div class="stats three">
+      <div class="stat"><span class="stat-n" id="calls">0</span><span class="stat-l" id="callsLabel">calls</span></div>
+      <div class="stat"><span class="stat-n" id="hitRate">—</span><span class="stat-l">hit rate</span></div>
+      <div class="stat"><span class="stat-n" id="favorite">—</span><span class="stat-l">favorite charm</span></div>
+    </div>
+    <div class="cal-head">
+      <button class="cal-nav" id="calPrev" type="button" aria-label="Previous month">‹</button>
+      <span class="cal-title" id="calTitle" aria-live="polite"></span>
+      <button class="cal-nav" id="calNext" type="button" aria-label="Next month">›</button>
+    </div>
+    <div class="cal-dow" aria-hidden="true"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+    <div class="cal" id="cal" role="group" aria-labelledby="historyTitle"></div>
+    <p class="cal-legend"><span><i class="dot hit"></i>called it</span><span><i class="dot miss"></i>not that day</span><span><i class="dot none"></i>no call</span></p>
+    <p class="day-detail" id="calDetail" aria-live="polite">Tap a day to see its fortune.</p>
+  </section>
+
+  <!-- ===== Charm pack ===== -->
+  <section class="pack" id="pack" aria-labelledby="packTitle">
+    <h2 class="section-title" id="packTitle">The charm pack</h2>
+    <p class="section-sub" id="packSub">Three charm skins, a monthly streak freeze, and your full history. One-time, <span id="packPrice">$9</span>. The daily spin is free forever, for everyone.</p>
+    <div class="skins" id="skins"></div>
+    <a class="btn primary" id="buyBtn" href="#" rel="noopener">Get the charm pack</a>
+    <p class="pack-status" id="packStatus" aria-live="polite" hidden></p>
+  </section>
+
+  <footer class="foot">
+    <p>Made by <a id="makerLink" href="#">Chris Bratkovics</a>. No accounts, no tracking, no ads. Chance is always free; purchases are always certain.</p>
+    <p><a href="legal/terms.html">Terms</a> · <a href="legal/privacy.html">Privacy</a> · <a href="legal/refunds.html">Refunds</a></p>
+  </footer>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

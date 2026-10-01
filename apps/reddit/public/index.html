@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Lucky Day</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="modulepreload" href="inline.js">
+</head>
+<body class="inline">
+<main class="wrap">
+  <header class="top">
+    <span class="brand">✦ Your Lucky Day</span>
+    <span class="eyebrow"><span id="dayNumber">Day —</span> · <span id="sparkleName">…</span></span>
+  </header>
+  <section class="reveal">
+    <div class="stage"><div class="glow"></div><div class="big" id="charmBig">✦</div></div>
+    <div class="reveal-text">
+      <p class="name" id="charmName">…</p>
+      <p class="fortune" id="fortune">Loading today's spin…</p>
+      <p class="verdict" id="verdict" hidden></p>
+    </div>
+  </section>
+  <section class="call" id="callSection">
+    <p class="h">Call tomorrow's charm <span class="cd">next spin in <b id="countdown">--:--:--</b></span></p>
+    <div class="charms" id="charms"></div>
+    <p class="status" id="callStatus">…</p>
+  </section>
+  <p class="archive-note" id="archiveNote" hidden>Today's spin is in the newest post.</p>
+  <button class="more" id="moreBtn" type="button">Streak, jar &amp; share ▸</button>
+</main>
+<script type="module" src="inline.js"></script>
+</body>
+</html>

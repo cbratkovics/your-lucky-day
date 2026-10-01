@@ -1,0 +1,69 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "your-lucky-day",
+  "post": {
+    "dir": "public",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html",
+        "height": "tall"
+      },
+      "game": {
+        "entry": "game.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.js"
+  },
+  "permissions": {
+    "realtime": true
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "[Your Lucky Day] Post today's spin",
+        "description": "Creates today's Your Lucky Day post in this community.",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-today"
+      }
+    ]
+  },
+  "triggers": {
+    "onAppInstall": "/internal/on/app-install"
+  },
+  "scheduler": {
+    "tasks": {
+      "daily-post-edt": {
+        "endpoint": "/internal/scheduler/daily-post",
+        "cron": "0 12 * * *"
+      },
+      "daily-post-est": {
+        "endpoint": "/internal/scheduler/daily-post",
+        "cron": "0 13 * * *"
+      }
+    }
+  },
+  "settings": {
+    "global": {
+      "DAILY_SALT": {
+        "type": "string",
+        "label": "Daily salt",
+        "helpText": "Server-side secret that makes tomorrow's spin unpredictable.",
+        "isSecret": true
+      }
+    }
+  },
+  "additionalSourceRoots": [
+    "../../packages/core"
+  ],
+  "scripts": {
+    "dev": "npm run watch",
+    "build": "npm run build"
+  },
+  "dev": {
+    "subreddit": "your_lucky_day_dev"
+  }
+}

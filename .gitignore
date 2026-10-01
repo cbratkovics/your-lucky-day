@@ -1,0 +1,15 @@
+node_modules/
+
+# Local dev database and Wrangler state
+apps/worker/dev.sqlite*
+.wrangler/
+.dev.vars
+
+# Reddit app build output (rebuilt by `npm run build` in apps/reddit)
+apps/reddit/dist/
+apps/reddit/public/*.js
+apps/reddit/public/*.js.map
+
+.DS_Store
+.env
+.env.*

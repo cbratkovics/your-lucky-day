@@ -1,0 +1,14 @@
+{
+  "name": "your-lucky-day",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "One spin a day. The whole world shares it.",
+  "scripts": {
+    "test": "node --test \"packages/core/test/*.test.js\" \"apps/worker/test/*.test.js\"",
+    "dev": "node apps/worker/dev-server.js",
+    "sync": "node scripts/sync-core.js",
+    "deploy": "node scripts/sync-core.js && cd apps/worker && wrangler deploy"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Lucky Day</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="modulepreload" href="expanded.js">
+</head>
+<body class="expanded">
+<main class="wrap scroll">
+  <header class="top">
+    <span class="brand">✦ Your Lucky Day</span>
+    <span class="eyebrow"><span id="dayNumber">Day —</span> · <span id="sparkleName">…</span></span>
+  </header>
+  <section class="reveal card">
+    <p class="sub" id="revealLead">Today the world drew</p>
+    <div class="stage"><div class="glow"></div><div class="big" id="charmBig">✦</div></div>
+    <p class="name" id="charmName">…</p>
+    <p class="fortune" id="fortune">Loading today's spin…</p>
+    <p class="move"><span class="tag">Lucky move</span> <span id="move">…</span></p>
+    <p class="verdict" id="verdict" hidden></p>
+    <p class="tally" id="revealTally"></p>
+  </section>
+  <p class="archive-note" id="archiveNote" hidden>Today's spin is in the newest post.</p>
+  <section class="call" id="callSection">
+    <p class="h">Call tomorrow's charm <span class="cd">next spin in <b id="countdown">--:--:--</b></span></p>
+    <p class="sub">Pick one before 8:00 am ET. Everyone in this community shares the same spin. Change your mind until then.</p>
+    <div class="charms" id="charms"></div>
+    <p class="status" id="callStatus">…</p>
+  </section>
+  <section class="jar">
+    <p class="h">The luck jar <span class="cd" id="jarCount">0 calls</span></p>
+    <p class="sub" id="jarNext">Every call fills the jar.</p>
+    <p class="unlocked" id="jarUnlocked"></p>
+  </section>
+  <section class="you">
+    <p class="h">Your history</p>
+    <div class="stats">
+      <div class="stat"><b id="streak">0</b><span>day streak</span></div>
+      <div class="stat"><b id="hits">0</b><span>called it</span></div>
+      <div class="stat"><b id="calls">0</b><span id="callsLabel">calls</span></div>
+      <div class="stat"><b id="hitRate">—</b><span>hit rate</span></div>
+      <div class="stat"><b id="bestStreak">0</b><span>best streak</span></div>
+      <div class="stat"><b id="favorite">—</b><span>favorite charm</span></div>
+    </div>
+    <div id="calWrap" hidden>
+      <div class="cal-head">
+        <button class="nav" id="calPrev" type="button" aria-label="Previous month">‹</button>
+        <span class="cal-title" id="calTitle" aria-live="polite"></span>
+        <button class="nav" id="calNext" type="button" aria-label="Next month">›</button>
+      </div>
+      <div class="cal-dow" aria-hidden="true"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+      <div class="cal" id="cal"></div>
+      <p class="legend"><span><i class="dot hit"></i>called it</span><span><i class="dot miss"></i>not that day</span><span><i class="dot none"></i>no call</span></p>
+    </div>
+    <p class="day-detail" id="calDetail" aria-live="polite">Loading your history…</p>
+    <div class="row">
+      <button class="btn primary" id="shareBtn" type="button">Share today</button>
+    </div>
+  </section>
+  <section class="community">
+    <p class="h">This community</p>
+    <div class="stats four" id="communityStats" hidden>
+      <div class="stat"><b id="comCalls">0</b><span id="comCallsLabel">calls</span></div>
+      <div class="stat"><b id="comRate">—</b><span>hit rate</span></div>
+      <div class="stat"><b id="comCharm">—</b><span>most called</span></div>
+      <div class="stat"><b id="comBest">—</b><span id="comBestLabel">best day</span></div>
+    </div>
+    <p class="sub" id="communityNote">Loading…</p>
+  </section>
+  <section class="board">
+    <p class="h">Leaderboard</p>
+    <label class="toggle"><input type="checkbox" id="lbOptin"> <span>Show me on the leaderboard</span></label>
+    <p class="sub" id="lbMe">Off by default. Turning it on shows your Reddit username, streak and hits to this community.</p>
+    <div class="boards">
+      <div><p class="bh">Streak</p><ol class="lb" id="lbStreak"></ol></div>
+      <div><p class="bh">Called it</p><ol class="lb" id="lbHits"></ol></div>
+    </div>
+  </section>
+  <footer class="foot">Chance is always free. Purchases are always certain. No accounts beyond Reddit, no tracking, no ads.</footer>
+</main>
+<script type="module" src="expanded.js"></script>
+</body>
+</html>

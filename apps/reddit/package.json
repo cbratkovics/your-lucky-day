@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "name": "your-lucky-day",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:client -- --minify && npm run build:server -- --minify",
+    "build:client": "esbuild --bundle --log-level=warning --target=es2023 --format=esm --outdir=public --platform=browser src/client/inline.js src/client/expanded.js",
+    "build:server": "esbuild --bundle --log-level=warning --target=es2023 --format=cjs --outdir=dist/server --platform=node src/server/index.js",
+    "clean": "rm -rf dist/ public/*.js public/*.js.map",
+    "playtest": "devvit playtest",
+    "upload": "npm run clean && npm run build && devvit upload",
+    "publish": "npm run clean && npm run build && devvit publish",
+    "watch": "sh -c 'trap \"kill 0\" exit; npm run build:client -- --watch=forever& npm run build:server -- --watch=forever& wait' --"
+  },
+  "devDependencies": {
+    "@devvit/web": "0.14.5",
+    "devvit": "0.14.5",
+    "esbuild": "0.28.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "license": "BSD-3-Clause"
+}

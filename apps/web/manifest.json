@@ -1,0 +1,14 @@
+{
+  "name": "Your Lucky Day",
+  "short_name": "Lucky Day",
+  "description": "One spin a day. The whole world shares it.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EEF0F8",
+  "theme_color": "#E8A33D",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
