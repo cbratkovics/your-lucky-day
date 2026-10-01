@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@devvit/web": "0.14.5",
-    "devvit": "1.0.0",
+    "devvit": "0.14.5",
     "esbuild": "0.28.2"
   },
   "engines": {
