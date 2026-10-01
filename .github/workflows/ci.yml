@@ -24,6 +24,6 @@ jobs:
         run: npm test
 
       # The route tests swap the Devvit SDK for an in-memory fake, so no install here either.
-      - name: Reddit route tests
+      - name: Reddit route and client tests
         working-directory: apps/reddit
-        run: node --import ./test/register.js --test test/routes.test.js
+        run: node --import ./test/register.js --test "test/*.test.js"

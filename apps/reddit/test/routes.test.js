@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it, beforeEach } from "node:test";
 import { EventEmitter } from "node:events";
 import { store, setContext } from "./fake-devvit.js";
-import { onRequest } from "../src/server/routes.js";
-import { computeOutcome, summarize } from "../../../packages/core/index.js";
+import { onRequest, postTitle } from "../src/server/routes.js";
+import { computeOutcome, describe as describeOutcome, shiftKey, summarize } from "../../../packages/core/index.js";
 
 const NOON_ET = Date.UTC(2026, 8, 30, 16, 0);
 function fakeReq(method, path, body) {
@@ -66,6 +66,31 @@ describe("reddit routes", () => {
     assert.equal((await call("POST", "/api/call", { charm: 1 })).status, 401);
   });
 
+  it("state for a logged-out user includes the live tallies, and no call of their own", async () => {
+    await at(NOON_SEP_29, async () => {
+      await call("POST", "/api/call", { charm: 2 });
+      as("bob");
+      await call("POST", "/api/call", { charm: 5 });
+    });
+    await at(NOON_ET, async () => {
+      as("carol");
+      await call("POST", "/api/call", { charm: 2 });
+      as("dave");
+      await call("POST", "/api/call", { charm: 0 });
+      as("erin");
+      await call("POST", "/api/call", { charm: 2 });
+    });
+    as(null);
+    const { status, body } = await at(NOON_ET, () => call("GET", "/api/state"));
+    assert.equal(status, 200);
+    assert.equal(body.signedIn, false);
+    assert.deepEqual(body.callable.tallies, [1, 0, 2, 0, 0, 0], "tomorrow's calls so far");
+    assert.deepEqual(body.revealed.tallies, [0, 0, 1, 0, 0, 1], "what was called for today's spin");
+    assert.equal(body.callable.myCall, null);
+    assert.equal(body.revealed.myCall, null);
+    assert.match(body.callable.channel, /^tally_2026_10_01$/, "and the channel the tally updates arrive on");
+  });
+
   it("rejects bad charm", async () => {
     assert.equal((await call("POST", "/api/call", { charm: "1" })).status, 400);
     assert.equal((await call("POST", "/api/call", { charm: 9 })).status, 400);
@@ -81,6 +106,36 @@ describe("reddit routes", () => {
     const m = await call("POST", "/internal/menu/post-today");
     assert.equal(m.body.showToast.appearance, "success");
     assert.equal(store.posts.length, 2);
+  });
+
+  it("the post title is the day's fortune; the weekday line opens the fallback text", async () => {
+    await at(REVEAL_SEP_30, () => call("POST", "/internal/scheduler/daily-post"));
+    await at(REVEAL_OCT_01, () => call("POST", "/internal/scheduler/daily-post"));
+    const fortune = (day) => describeOutcome(computeOutcome("test-salt", day)).fortune;
+    assert.equal(store.posts[0].title, `Your Lucky Day #1 — "${fortune("2026-09-30")}"`);
+    assert.equal(store.posts[1].title, `Your Lucky Day #2 — "${fortune("2026-10-01")}"`);
+    assert.ok(!/Wednesday|spin is in/.test(store.posts[0].title));
+    assert.match(store.posts[0].textFallback.text, /^Wednesday's spin is in\. Call tomorrow's charm\.\n\nToday the world drew \*\*/);
+    assert.match(store.posts[1].textFallback.text, /^Thursday's spin is in\./);
+    assert.ok(store.posts[0].textFallback.text.includes(fortune("2026-09-30")), "the fortune stays in the fallback too");
+  });
+
+  it("every post title fits Reddit's 300-character limit", () => {
+    for (let i = 0; i < 400; i++) {
+      const day = shiftKey("2026-09-30", i);
+      const title = postTitle(i + 1, describeOutcome(computeOutcome("test-salt", day)).fortune);
+      assert.match(title, /^Your Lucky Day #\d+ — ".+"$/);
+      assert.ok(title.length <= 300, `${day}: ${title.length}`);
+      assert.ok(!title.includes("…"), `${day}: a real fortune is never cut`);
+    }
+    // A fortune far past the limit is cut to exactly fit, and still closes its quote.
+    const long = postTitle(1234, "word ".repeat(100));
+    assert.equal(long.length <= 300 && long.length >= 296, true, String(long.length));
+    assert.match(long, /^Your Lucky Day #1234 — "word .*word…"$/);
+    const emoji = postTitle(7, "🍀".repeat(200));
+    assert.ok(emoji.length <= 300);
+    assert.ok(emoji.isWellFormed(), "an emoji is never split in half");
+    assert.match(emoji, /🍀…"$/);
   });
 
   it("scheduler posts only at 08:00 ET and only once", async () => {
