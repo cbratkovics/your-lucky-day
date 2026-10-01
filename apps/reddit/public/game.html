@@ -24,7 +24,7 @@
   </section>
   <p class="archive-note" id="archiveNote" hidden>Today's spin is in the newest post.</p>
   <section class="call" id="callSection">
-    <p class="h">Call tomorrow's charm <span class="cd">next spin in <b id="countdown">--:--:--</b></span></p>
+    <p class="h">Call tomorrow's charm <span class="cd">next spin in <b id="countdown" aria-live="off">--:--:--</b></span></p>
     <p class="sub">Pick one before 8:00 am ET. Everyone in this community shares the same spin. Change your mind until then.</p>
     <div class="charms" id="charms"></div>
     <p class="status" id="callStatus">…</p>
@@ -73,7 +73,8 @@
     <p class="h">Leaderboard</p>
     <label class="toggle"><input type="checkbox" id="lbOptin"> <span>Show me on the leaderboard</span></label>
     <p class="sub" id="lbMe">Off by default. Turning it on shows your Reddit username, streak and hits to this community.</p>
-    <div class="boards">
+    <p class="lb-empty" id="lbEmpty" hidden>Nobody on the board yet — be first</p>
+    <div class="boards" id="lbBoards" hidden>
       <div><p class="bh">Streak</p><ol class="lb" id="lbStreak"></ol></div>
       <div><p class="bh">Called it</p><ol class="lb" id="lbHits"></ol></div>
     </div>

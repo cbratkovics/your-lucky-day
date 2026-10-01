@@ -8,7 +8,8 @@
  * "archive" (an older post showing its own day, nothing to call).
  */
 import { connectRealtime, context, requestExpandedMode, showLoginPrompt, showShareSheet, showToast } from "@devvit/web/client";
-import { plural, shareText } from "../../../../packages/core/index.js";
+import { charmButtonLabel, plural, shareText } from "../../../../packages/core/index.js";
+import { pctText } from "./view.js";
 
 export const $ = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
 
@@ -158,7 +159,8 @@ function renderCall(s, mode, onState) {
       b.style.setProperty("--h", String(c.hue));
       b.setAttribute("aria-pressed", String(s.callable.myCall === i));
       const pct = total ? Math.round((100 * s.callable.tallies[i]) / total) : 0;
-      b.innerHTML = `<span class="ce">${c.emoji}</span><span class="cl">${c.name}</span><span class="cp">${total ? pct + "%" : "—"}</span><span class="cb"><i style="width:${pct}%"></i></span>`;
+      b.setAttribute("aria-label", charmButtonLabel(c.name, pct));
+      b.innerHTML = `<span class="ce">${c.emoji}</span><span class="cl">${c.name}</span><span class="cp">${pctText(pct, total, s.signedIn)}</span><span class="cb"><i style="width:${pct}%"></i></span>`;
       b.addEventListener("click", () => makeCall(s, i, mode, onState));
       return b;
     }),

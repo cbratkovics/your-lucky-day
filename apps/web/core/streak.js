@@ -92,3 +92,24 @@ export function applyFreeze(history, throughDay) {
   if (!called(history[before]) && !history[before]?.frozen) return { history, spent: false };
   return { history: { ...history, [gap]: { called: null, frozen: true } }, spent: true };
 }
+
+export const MAX_FREEZES = 3;
+
+/**
+ * The charm pack's monthly freeze: one token on the first visit of each
+ * calendar month, never more than MAX_FREEZES banked. Call it on every visit;
+ * it only grants when `yearMonth` is later than the month already recorded, so
+ * a repeat visit or a clock that steps back can't grant again. A month visited
+ * at the cap is still recorded, so a token spent later that month isn't topped
+ * back up. Pure: does not mutate the input.
+ * @param {{ freezes?: number, freezeMonth?: string }} state
+ * @param {string} yearMonth "YYYY-MM" of the visit
+ * @returns {{ freezes: number, freezeMonth: string, granted: boolean }}
+ */
+export function grantMonthlyFreeze(state, yearMonth) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(yearMonth)) throw new Error(`bad yearMonth ${yearMonth}`);
+  const banked = Math.min(MAX_FREEZES, Math.max(0, Math.floor(Number(state.freezes) || 0)));
+  const last = typeof state.freezeMonth === "string" ? state.freezeMonth : "";
+  if (yearMonth <= last) return { freezes: banked, freezeMonth: last, granted: false };
+  return { freezes: Math.min(MAX_FREEZES, banked + 1), freezeMonth: yearMonth, granted: banked < MAX_FREEZES };
+}

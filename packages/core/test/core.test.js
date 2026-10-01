@@ -5,15 +5,19 @@ import {
   CHARMS,
   FORTUNES,
   LUCKY_MOVES,
+  MAX_FREEZES,
   SPARKLES,
   THEMED_FORTUNES,
   applyFreeze,
   bestStreak,
+  calendarCellLabel,
   callableDay,
+  charmButtonLabel,
   computeOutcome,
   currentStreak,
   dayNumber,
   describe as describeOutcome,
+  grantMonthlyFreeze,
   hash53,
   monthGrid,
   msUntilNextReveal,
@@ -218,6 +222,55 @@ describe("streaks", () => {
   });
 });
 
+// ---- monthly freeze --------------------------------------------------------
+describe("monthly freeze grant", () => {
+  it("the first visit of a month grants one freeze", () => {
+    assert.deepEqual(grantMonthlyFreeze({ freezes: 0 }, "2026-10"), { freezes: 1, freezeMonth: "2026-10", granted: true });
+    assert.deepEqual(grantMonthlyFreeze({}, "2026-10"), { freezes: 1, freezeMonth: "2026-10", granted: true }, "a pack bought before freezes existed");
+  });
+
+  it("a second visit in the same month grants nothing, however often it runs", () => {
+    let s = grantMonthlyFreeze({ freezes: 0 }, "2026-10");
+    for (let i = 0; i < 5; i++) {
+      s = grantMonthlyFreeze(s, "2026-10");
+      assert.deepEqual(s, { freezes: 1, freezeMonth: "2026-10", granted: false });
+    }
+  });
+
+  it("the next month grants again, and a skipped month isn't made up", () => {
+    const oct = grantMonthlyFreeze({ freezes: 0 }, "2026-10");
+    assert.deepEqual(grantMonthlyFreeze(oct, "2026-11"), { freezes: 2, freezeMonth: "2026-11", granted: true });
+    assert.deepEqual(grantMonthlyFreeze(oct, "2027-01"), { freezes: 2, freezeMonth: "2027-01", granted: true });
+  });
+
+  it("the cap holds at three banked", () => {
+    let s = { freezes: 0 };
+    for (const month of ["2026-10", "2026-11", "2026-12", "2027-01", "2027-02"]) s = grantMonthlyFreeze(s, month);
+    assert.equal(MAX_FREEZES, 3);
+    assert.deepEqual(s, { freezes: 3, freezeMonth: "2027-02", granted: false });
+    assert.equal(grantMonthlyFreeze({ freezes: 7, freezeMonth: "2026-10" }, "2026-11").freezes, 3, "an over-full bank comes back to the cap");
+  });
+
+  it("a month visited at the cap is used up: spending later that month isn't topped back up", () => {
+    const full = grantMonthlyFreeze({ freezes: 3, freezeMonth: "2026-10" }, "2026-11");
+    assert.deepEqual(grantMonthlyFreeze({ ...full, freezes: 2 }, "2026-11"), { freezes: 2, freezeMonth: "2026-11", granted: false });
+  });
+
+  it("a month key that goes backwards never grants, so going forward again can't grant twice", () => {
+    const nov = grantMonthlyFreeze({ freezes: 1, freezeMonth: "2026-10" }, "2026-11");
+    const back = grantMonthlyFreeze(nov, "2026-10");
+    assert.deepEqual(back, { freezes: 2, freezeMonth: "2026-11", granted: false });
+    assert.deepEqual(grantMonthlyFreeze(back, "2026-11"), { freezes: 2, freezeMonth: "2026-11", granted: false });
+  });
+
+  it("is pure and rejects a malformed month", () => {
+    const s = Object.freeze({ freezes: 1, freezeMonth: "2026-10" });
+    grantMonthlyFreeze(s, "2026-11");
+    assert.deepEqual(s, { freezes: 1, freezeMonth: "2026-10" });
+    for (const bad of ["2026-13", "2026-1", "October", ""]) assert.throws(() => grantMonthlyFreeze(s, bad));
+  });
+});
+
 // ---- share ---------------------------------------------------------------
 describe("share card", () => {
   const FORTUNE = "Today is a good day to ask.";
@@ -316,6 +369,15 @@ describe("history", () => {
     assert.deepEqual(summarize({}, {}), { calls: 0, hits: 0, hitRate: 0, currentStreak: 0, bestStreak: 0, favoriteCharm: null });
   });
 
+  it("no favorite charm is picked from days without a call", () => {
+    // A first visit records the drawn days; a visit-only or frozen day is not a call.
+    const visited = { "2026-10-01": { called: null }, "2026-10-02": { called: null, frozen: true } };
+    const sum = summarize(visited, { "2026-10-01": 3, "2026-10-02": 0 }, "2026-10-02");
+    assert.equal(sum.favoriteCharm, null);
+    assert.equal(sum.calls, 0);
+    assert.equal(summarize({}, { "2026-10-01": 3 }, "2026-10-01").favoriteCharm, null);
+  });
+
   it("monthGrid for 2026-10 is a Sunday-first 6-row calendar", () => {
     const grid = monthGrid("2026-10");
     assert.equal(grid.length, 42);
@@ -354,5 +416,25 @@ describe("plural", () => {
     assert.equal(plural(1814, "call"), "1,814 calls");
     assert.equal(plural(1, "person", "people"), "1 person");
     assert.equal(plural(3, "person", "people"), "3 people");
+  });
+});
+
+// ---- accessible names ------------------------------------------------------
+describe("accessible names", () => {
+  it("a charm button reads as its name and share of calls", () => {
+    assert.equal(charmButtonLabel("Clover", 42), "Clover, 42% called");
+    assert.equal(charmButtonLabel("Acorn", 0), "Acorn, 0% called");
+  });
+
+  it("a calendar cell reads as the day, what was drawn, what you called, hit or miss", () => {
+    assert.equal(calendarCellLabel("2026-10-03", { drew: "Clover", called: "Star" }), "October 3: drew Clover, you called Star, miss");
+    assert.equal(calendarCellLabel("2026-10-04", { drew: "Key", called: "Key" }), "October 4: drew Key, you called Key, hit");
+    assert.equal(calendarCellLabel("2026-11-01", { drew: "Moon" }), "November 1: drew Moon, no call");
+  });
+
+  it("a calendar cell with no draw yet says why", () => {
+    assert.equal(calendarCellLabel("2026-10-05", { called: "Moon" }), "October 5: you called Moon, waiting for the spin");
+    assert.equal(calendarCellLabel("2026-10-02", { called: "Fish", note: "spin not seen here" }), "October 2: you called Fish, spin not seen here");
+    assert.equal(calendarCellLabel("2026-10-02", { note: "streak freeze" }), "October 2: streak freeze");
   });
 });

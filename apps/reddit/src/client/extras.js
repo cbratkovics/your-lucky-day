@@ -5,8 +5,9 @@
  * Each section loads on its own; one failing never blanks the others.
  */
 import { showLoginPrompt, showToast } from "@devvit/web/client";
-import { THEMED_FORTUNES, monthGrid, plural, shiftMonth, summarize } from "../../../../packages/core/index.js";
+import { THEMED_FORTUNES, calendarCellLabel, monthGrid, plural, shiftMonth, summarize } from "../../../../packages/core/index.js";
 import { $, countTile, friendlyDay } from "./ui.js";
+import { boardIsEmpty, dayKind } from "./view.js";
 
 /** @param {any} s the latest /api/state payload */
 export function loadExtras(s) {
@@ -71,16 +72,6 @@ function renderStats() {
   if (fav) $("favorite").setAttribute("aria-label", fav.name);
 }
 
-/** hit / miss / none (drawn, no call) / pending (called, not drawn yet) / blank (nothing to show) */
-function dayKind(dayKey) {
-  const drawn = hist.outcomes[dayKey];
-  const called = hist.calls[dayKey];
-  if (drawn !== undefined) return called === undefined ? "none" : called === drawn ? "hit" : "miss";
-  return called !== undefined && dayKey > hist.revealedDay ? "pending" : "blank";
-}
-
-const KIND_LABEL = { hit: "you called it", miss: "not that day", none: "no call", pending: "waiting for the spin", blank: "" };
-
 function renderCalendar() {
   if (!hist) return;
   $("calWrap").hidden = false;
@@ -94,8 +85,10 @@ function renderCalendar() {
     ...monthGrid(calMonth).map((cell) => {
       const b = document.createElement("button");
       b.type = "button";
-      const kind = cell.inMonth ? dayKind(cell.dayKey) : "blank";
-      b.className = `day ${cell.inMonth ? kind : "out"}${cell.dayKey === calDay ? " on" : ""}`;
+      const kind = cell.inMonth ? dayKind(cell.dayKey, hist) : "blank";
+      const isToday = cell.inMonth && cell.dayKey === hist.revealedDay;
+      b.className = `day ${cell.inMonth ? kind : "out"}${isToday ? " today" : ""}${cell.dayKey === calDay ? " on" : ""}`;
+      if (isToday) b.setAttribute("aria-current", "date");
       b.disabled = kind === "blank";
       const drawn = hist.outcomes[cell.dayKey];
       const emoji = kind === "blank" ? "" : kind === "pending" ? "…" : state.charms[drawn].emoji;
@@ -109,8 +102,8 @@ function renderCalendar() {
       dot.className = `dot ${kind}`;
       b.append(num, em, dot);
       if (kind !== "blank") {
-        const what = kind === "pending" ? "" : `${state.charms[drawn].name}, `;
-        b.setAttribute("aria-label", `${friendlyDay(cell.dayKey)}: ${what}${KIND_LABEL[kind]}`);
+        const called = hist.calls[cell.dayKey];
+        b.setAttribute("aria-label", calendarCellLabel(cell.dayKey, { drew: state.charms[drawn]?.name, called: state.charms[called]?.name }));
         b.setAttribute("aria-pressed", String(cell.dayKey === calDay));
         b.addEventListener("click", () => {
           calDay = cell.dayKey;
@@ -171,7 +164,12 @@ async function loadCommunity() {
     $("communityNote").textContent = "Couldn't load community stats.";
     return;
   }
-  $("communityStats").hidden = false;
+  // Nothing to tabulate yet: one line instead of a row of dashes.
+  $("communityStats").hidden = c.totalCalls === 0;
+  if (c.totalCalls === 0) {
+    $("communityNote").textContent = "No calls yet in this community.";
+    return;
+  }
   countTile("comCalls", c.totalCalls, "call");
   const chance = `chance is ${Math.round(100 * c.baseline)}%`;
   $("comRate").textContent = c.settledCalls ? `${Math.round(100 * c.hitRate)}%` : "—";
@@ -204,6 +202,10 @@ async function loadLeaderboard() {
 
 function renderLeaderboard() {
   /** @type {HTMLInputElement} */ ($("lbOptin")).checked = board.optedIn;
+  // With nobody on either list, one line stands in for two empty boxes.
+  const empty = boardIsEmpty(board);
+  $("lbEmpty").hidden = !empty;
+  $("lbBoards").hidden = empty;
   fillBoard("lbStreak", board.streak, (n) => plural(n, "day"));
   fillBoard("lbHits", board.hits, (n) => plural(n, "hit"));
   const me = board.me;

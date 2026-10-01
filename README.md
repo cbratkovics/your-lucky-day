@@ -33,10 +33,10 @@ small shared core.
 ### One core, two surfaces
 
 ```
-packages/core/   pure JS ESM: seeded outcome, 08:00 ET clock (DST-safe), streaks, themed fortunes, history stats, share card — 39 tests
+packages/core/   pure JS ESM: seeded outcome, 08:00 ET clock (DST-safe), streaks, themed fortunes, history stats, share card — 50 tests
 apps/web/        static PWA (HTML/CSS/JS, no framework, no bundler)
-apps/worker/     Cloudflare Worker: serves the site + JSON API; D1 for tallies and community stats — 19 tests
-apps/reddit/     Devvit app reusing the same core — 29 route tests
+apps/worker/     Cloudflare Worker: serves the site + JSON API; D1 for tallies and community stats — 24 tests
+apps/reddit/     Devvit app reusing the same core — 40 tests
 scripts/         sync-core.js copies packages/core → apps/web/core before deploy
 ```
 
@@ -99,16 +99,16 @@ The game keeps these on purpose.
 Node ≥ 22 (`node:sqlite` stands in for D1). About 60 seconds:
 
 ```bash
-npm test          # 58 tests, ~250 ms
+npm test          # 74 tests, ~300 ms
 npm run dev       # http://localhost:8787 — real API against a local SQLite file
 ```
 
 Open the URL on your phone via your Mac's LAN IP to feel it on a real screen.
 
-The Reddit route tests run against an in-memory stand-in for Devvit and need no install:
+The Reddit tests run against an in-memory stand-in for Devvit and need no install:
 
 ```bash
-cd apps/reddit && node --import ./test/register.js --test test/routes.test.js   # 29 tests
+cd apps/reddit && node --import ./test/register.js --test "test/*.test.js"   # 40 tests
 ```
 
 ## Operating

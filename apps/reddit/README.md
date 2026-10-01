@@ -19,7 +19,7 @@ Any community that likes a low-effort daily ritual: a one-tap moment that gives 
 ## How to use it (moderators)
 
 1. Install the app on your subreddit. It immediately creates today's post.
-2. From then on it posts once a day at 8:00 am US Eastern, automatically. Each post owns its day: once a newer spin is out, an older post keeps showing its own day's result and what the member called for it, with a note that today's spin is in the newest post.
+2. From then on it posts once a day at 8:00 am US Eastern, automatically, with the day's fortune as the post title. Each post owns its day: once a newer spin is out, an older post keeps showing its own day's result and what the member called for it, with a note that today's spin is in the newest post.
 3. Want a post right now (for example after a quiet install)? Use the subreddit menu: **[Your Lucky Day] Post today's spin**.
 4. Consider pinning the day's post, or giving it a flair. That's it — there are no settings to maintain.
 
@@ -28,7 +28,7 @@ Any community that likes a low-effort daily ritual: a one-tap moment that gives 
 - Open the post. The big charm is today's result; the text under it is today's fortune.
 - Tap one of the six small charms to call tomorrow's. You can change your mind until 8:00 am Eastern.
 - Tap **Streak, jar & share** to see your streak, the community jar, what everyone called, and to share a spoiler-free result card. The same view has your history calendar, this community's stats, and the leaderboard.
-- Logged-out visitors can see the spin but need to sign in to call a charm.
+- Logged-out visitors can see the spin and what share of the community has called each charm so far, but need to sign in to call one.
 
 ## History, stats and leaderboard
 
@@ -71,3 +71,9 @@ npm run publish                        # submit for review
 ```
 
 Layout: `src/server` (Node, single CJS bundle via esbuild), `src/client` (two entrypoints: `inline` for the feed, `expanded` for the full view), `public/` (static HTML/CSS, bundled JS output), and the shared game core in `../../packages/core` (included in the review bundle via `additionalSourceRoots`). Scheduler runs at 12:00 and 13:00 UTC; the handler posts only when it's 8:00 am America/New_York and no post exists yet for that day, which makes daylight-saving time a non-event.
+
+### Changelog
+
+- 0.0.7: the day's fortune as the post title, clearer empty states, the live tally for logged-out visitors, screen-reader labels.
+- 0.0.6: history, stats, opt-in leaderboard, themed fortunes.
+- 0.0.4: removed off-platform links.

@@ -50,6 +50,7 @@ const HISTORY_DAYS = 400; // outcomes returned to the calendar: a full year and 
 const TALLY_DAYS = 60; // how long per-day tally and call keys are kept
 const BACKFILL_DAYS = 7; // days a missed post can be caught up on
 const LEADERBOARD_SIZE = 10;
+const TITLE_MAX = 300; // Reddit's limit on a post title
 
 /** @param {import('node:http').IncomingMessage} req @param {import('node:http').ServerResponse} res */
 export async function onRequest(req, res) {
@@ -464,6 +465,25 @@ async function myRank(key, uid) {
 // ---------------------------------------------------------------------------
 // Posting
 
+/**
+ * `Your Lucky Day #N — "<fortune>"`. The fortune is cut short with an ellipsis
+ * if the title would otherwise pass Reddit's limit.
+ * @param {number} n day number
+ * @param {string} fortune
+ */
+export function postTitle(n, fortune) {
+  const head = `Your Lucky Day #${n} — "`;
+  const room = TITLE_MAX - head.length - 1; // the closing quote
+  if (fortune.length <= room) return `${head}${fortune}"`;
+  let cut = "";
+  // Whole characters only, so an emoji is never split in half.
+  for (const ch of fortune) {
+    if (cut.length + ch.length > room - 1) break;
+    cut += ch;
+  }
+  return `${head}${cut.trimEnd()}…"`;
+}
+
 async function createDailyPost(now) {
   const day = revealedDay(now);
   const n = Math.max(1, dayNumber(day, LAUNCH_DAY));
@@ -471,11 +491,12 @@ async function createDailyPost(now) {
   const weekday = new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
   const post = await reddit.submitCustomPost({
     subredditName: context.subredditName,
-    title: `Your Lucky Day #${n} — ${weekday}'s spin is in. Call tomorrow's charm.`,
+    title: postTitle(n, o.fortune),
     entry: "default",
     postData: { dayKey: day },
     textFallback: {
       text:
+        `${weekday}'s spin is in. Call tomorrow's charm.\n\n` +
         `Today the world drew **${o.charm.emoji} ${o.charm.name}** (${o.sparkle.name}).\n\n` +
         `*${o.fortune}*\n\nLucky move: ${o.move}\n\n` +
         `Open this post in the Reddit app or new Reddit to call tomorrow's charm.`,

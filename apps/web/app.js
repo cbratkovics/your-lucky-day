@@ -6,11 +6,14 @@ import {
   MILESTONES,
   SPARKLES,
   applyFreeze,
+  calendarCellLabel,
   callableDay,
+  charmButtonLabel,
   computeOutcome,
   currentStreak,
   dayNumber,
   describe,
+  grantMonthlyFreeze,
   localParts,
   monthGrid,
   msUntilNextReveal,
@@ -52,6 +55,13 @@ function save() {
     /* private mode etc. — the page still works for this visit */
   }
 }
+// Another tab saved: take its state, so this tab never writes an older copy
+// back over it (which would undo a call, or hand back a freeze spent there).
+window.addEventListener("storage", (e) => {
+  if (e.key !== KEY || !e.newValue) return;
+  state = load();
+  if (today) render();
+});
 
 // ---------------------------------------------------------------------------
 // Skins (charm pack). Skin 0 is the free default.
@@ -80,7 +90,7 @@ const el = {
   calls: $("calls"), callsLabel: $("callsLabel"), hitRate: $("hitRate"), favorite: $("favorite"),
   calPrev: /** @type {HTMLButtonElement} */ ($("calPrev")), calNext: /** @type {HTMLButtonElement} */ ($("calNext")),
   calTitle: $("calTitle"), cal: $("cal"), calDetail: $("calDetail"),
-  community: $("community"), comCalls: $("comCalls"), comCallsLabel: $("comCallsLabel"), comRate: $("comRate"),
+  community: $("community"), comStats: $("comStats"), comCalls: $("comCalls"), comCallsLabel: $("comCallsLabel"), comRate: $("comRate"),
   comCharm: $("comCharm"), comBest: $("comBest"), comBestLabel: $("comBestLabel"), communityNote: $("communityNote"),
   shareBtn: $("shareBtn"), copyBtn: $("copyBtn"), freezeBtn: $("freezeBtn"), shareDone: $("shareDone"),
   shareReddit: /** @type {HTMLAnchorElement} */ ($("shareReddit")), shareX: /** @type {HTMLAnchorElement} */ ($("shareX")),
@@ -158,13 +168,13 @@ function reconcileHistory() {
     state.days[dayKey] = { charm: resultIdx, fortune: outcome.fortune };
     save();
   }
-  // Monthly freeze grant for pack owners.
+  // Monthly freeze grant for pack owners: one on the first visit of each calendar month.
   if (hasPack()) {
     const p = localParts(Date.now());
-    const month = `${p.y}-${String(p.m).padStart(2, "0")}`;
-    if (state.freezeMonth !== month) {
-      state.freezeMonth = month;
-      state.freezes = Math.min((state.freezes || 0) + 1, 3);
+    const grant = grantMonthlyFreeze(state, `${p.y}-${String(p.m).padStart(2, "0")}`);
+    if (grant.freezeMonth !== state.freezeMonth || grant.freezes !== state.freezes) {
+      state.freezeMonth = grant.freezeMonth;
+      state.freezes = grant.freezes;
       save();
     }
   }
@@ -245,6 +255,7 @@ function renderCall() {
       b.style.setProperty("--h", String(c.hue));
       b.setAttribute("aria-pressed", String(mine === i));
       const pct = total ? Math.round((100 * tallies[i]) / total) : 0;
+      b.setAttribute("aria-label", charmButtonLabel(c.name, pct));
       b.innerHTML = `<span class="charm-emoji">${emojiFor(i)}</span><span class="charm-label">${c.name}</span><span class="charm-pct">${total ? pct + "%" : "—"}</span><span class="charm-bar"><i style="width:${pct}%"></i></span>`;
       b.addEventListener("click", () => makeCall(i));
       return b;
@@ -273,6 +284,12 @@ function renderCommunity() {
   el.community.hidden = !community;
   if (!community) return;
   const c = community;
+  // Nothing to tabulate yet: one line instead of a row of dashes.
+  el.comStats.hidden = c.totalCalls === 0;
+  if (c.totalCalls === 0) {
+    el.communityNote.textContent = "No calls yet in this community.";
+    return;
+  }
   countTile(el.comCalls, el.comCallsLabel, c.totalCalls, "call");
   el.comRate.textContent = c.settledCalls ? `${Math.round(100 * c.hitRate)}%` : "—";
   el.comCharm.textContent = c.mostCalled === null ? "—" : emojiFor(c.mostCalled);
@@ -349,7 +366,8 @@ function renderHistory() {
   const decided = Object.entries(state.history).some(([day, rec]) => rec.called !== null && rec.called !== undefined && outcomes[day] !== undefined);
   el.hitRate.textContent = decided ? `${Math.round(100 * sum.hitRate)}%` : "—";
   el.favorite.textContent = sum.favoriteCharm === null ? "—" : emojiFor(sum.favoriteCharm);
-  if (sum.favoriteCharm !== null) el.favorite.setAttribute("aria-label", CHARMS[sum.favoriteCharm].name);
+  if (sum.favoriteCharm === null) el.favorite.removeAttribute("aria-label");
+  else el.favorite.setAttribute("aria-label", CHARMS[sum.favoriteCharm].name);
 
   // Paging is bounded to launch month..current month.
   const { min, max } = calendarBounds();
@@ -364,7 +382,9 @@ function renderHistory() {
       const b = document.createElement("button");
       b.type = "button";
       const kind = cell.inMonth ? dayKind(cell.dayKey, outcomes) : "blank";
-      b.className = `cal-day ${cell.inMonth ? kind : "out"}${cell.dayKey === calDay ? " on" : ""}`;
+      const isToday = cell.inMonth && cell.dayKey === today.revealed.dayKey;
+      b.className = `cal-day ${cell.inMonth ? kind : "out"}${isToday ? " today" : ""}${cell.dayKey === calDay ? " on" : ""}`;
+      if (isToday) b.setAttribute("aria-current", "date");
       b.disabled = kind === "blank";
       const num = document.createElement("span");
       num.className = "cal-num";
@@ -377,7 +397,8 @@ function renderHistory() {
       b.append(num, emoji, dot);
       if (kind !== "blank") {
         const drawn = outcomes[cell.dayKey];
-        b.setAttribute("aria-label", `${friendlyDay(cell.dayKey)}: ${drawn === undefined ? "" : `${CHARMS[drawn].name}, `}${DAY_LABEL[kind]}`);
+        const called = state.history[cell.dayKey]?.called ?? null;
+        b.setAttribute("aria-label", calendarCellLabel(cell.dayKey, { drew: CHARMS[drawn]?.name, called: CHARMS[called]?.name, note: DAY_NOTE[kind] }));
         b.setAttribute("aria-pressed", String(cell.dayKey === calDay));
         b.addEventListener("click", () => {
           calDay = cell.dayKey;
@@ -411,7 +432,8 @@ function dayKind(dayKey, outcomes) {
 
 // What a cell shows when it isn't the drawn charm.
 const DAY_MARK = { pending: "…", unseen: "?", frozen: "🧊", blank: "" };
-const DAY_LABEL = { hit: "you called it", miss: "not that day", none: "no call", pending: "waiting for the spin", unseen: "spin not seen here", frozen: "streak freeze" };
+// How a cell's label ends when there is no draw to compare the call against.
+const DAY_NOTE = { pending: "waiting for the spin", unseen: "spin not seen here", frozen: "streak freeze" };
 
 function renderDayDetail(outcomes) {
   const kind = calDay && calDay.startsWith(calMonth) ? dayKind(calDay, outcomes) : "blank";
